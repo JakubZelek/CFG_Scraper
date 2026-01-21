@@ -3,7 +3,8 @@
 A distributed system for extracting Control Flow Graphs (CFGs) from source code repositories and storing them in Elasticsearch with isomorphism detection.
 
 # Architecture
-image.png
+<img width="1086" height="441" alt="image" src="https://github.com/user-attachments/assets/4a8f3711-d634-47bf-a63f-bf4048d4ae2e" />
+
 
 ## Architecture Components
 
