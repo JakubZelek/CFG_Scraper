@@ -76,12 +76,37 @@ services:
       elasticsearch:
         condition: service_healthy
 
+# Elasticsearch Upload
+  elasticsearch-upload:
+    build:
+      context: .
+      dockerfile: Dockerfile.ElasticsearchUpload
+    container_name: elasticsearch-upload
+    environment:
+      KAFKA_BROKER: kafka:${KAFKA_HOST}
+      GRAPH_KAFKA_TOPIC: ${GRAPH_KAFKA_TOPIC}
+      ELASTIC_HOST: http://elasticsearch:${ELASTIC_HOST}
+      CFG_ISOMORPHISM_INDEX: ${CFG_ISOMORPHISM_INDEX}
+      CFG_INDEX: ${CFG_INDEX}
+      ERROR_INDEX: ${ERROR_INDEX}
+      
+    depends_on:
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
+
 # CFG Processor settings (Python)
   cfg-processor-python:
     build:
       context: .
       dockerfile: Dockerfile.CfgProcessorPython
     container_name: cfg-processor
+    deploy:
+      resources:
+        limits:
+          memory: 4G
     environment:
       LANGUAGE: ${PYTHON_CFG_LANGUAGE}
       EXTENSION: ${PYTHON_CFG_EXTENSION}
@@ -105,6 +130,10 @@ services:
       context: .
       dockerfile: Dockerfile.CfgProcessorCpp
     container_name: cfg-processor-cpp
+    deploy:
+      resources:
+        limits:
+          memory: 4G
     environment:
       LANGUAGE: ${CPP_CFG_LANGUAGE}
       EXTENSION: ${CPP_CFG_EXTENSION}
@@ -118,26 +147,6 @@ services:
       LOGGING_TO_ELASTIC: ${LOGGING_TO_ELASTIC}
       REPO_FOLDER: ${CPP_REPO_FOLDER}
 
-    depends_on:
-      kafka:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-
-# Elasticsearch Upload
-  elasticsearch-upload:
-    build:
-      context: .
-      dockerfile: Dockerfile.ElasticsearchUpload
-    container_name: elasticsearch-upload
-    environment:
-      KAFKA_BROKER: kafka:${KAFKA_HOST}
-      GRAPH_KAFKA_TOPIC: ${GRAPH_KAFKA_TOPIC}
-      ELASTIC_HOST: http://elasticsearch:${ELASTIC_HOST}
-      CFG_ISOMORPHISM_INDEX: ${CFG_ISOMORPHISM_INDEX}
-      CFG_INDEX: ${CFG_INDEX}
-      ERROR_INDEX: ${ERROR_INDEX}
-      
     depends_on:
       kafka:
         condition: service_healthy
