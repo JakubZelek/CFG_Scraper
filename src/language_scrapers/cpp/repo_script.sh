@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 REPO_URL=$1
 
@@ -14,13 +13,14 @@ if [ -d "$REPO_DIR" ]; then
     rm -rf "$REPO_DIR"
 fi
 
-git clone --recurse-submodules "$REPO_URL"
-BUILD_DIR="$BASE_DIR/$REPO_DIR/build"
+git clone --recurse-submodules "$REPO_URL" || { echo "ERROR: Failed to clone $REPO_URL"; exit 1; }
 
+BUILD_DIR="$BASE_DIR/$REPO_DIR/build"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-cmake -S .. -B . -DCMAKE_CXX_STANDARD=17 -DCMAKE_C_STANDARD=99 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+# Try to configure with cmake - may fail due to missing dependencies
+cmake -S .. -B . -DCMAKE_CXX_STANDARD=17 -DCMAKE_C_STANDARD=99 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || echo "CMake configure failed, checking for compile_commands.json anyway..."
 
 # Check if compile_commands.json was generated
 if [ ! -f "compile_commands.json" ]; then
@@ -28,4 +28,7 @@ if [ ! -f "compile_commands.json" ]; then
     exit 1
 fi
 
+echo "compile_commands.json found, proceeding..."
+
+# Build is optional - CFG generation only needs compile_commands.json
 cmake --build . || echo "Build failed, but compile_commands.json exists"
