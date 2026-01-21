@@ -30,12 +30,29 @@ async def cfg_processor():
         repo_path = f"{cfg_processor_settings.repo_folder}/{url.split('/')[-1]}"
         repository_manager = RepositoryManager(url)
 
+        try:
+            logger.info(f"Clone repository: {message['url']}")
+            repository_manager.clone_and_build(cfg_processor_settings.repo_script)
+            commit_hash = repository_manager.get_commit_hash(repo_path=repo_path)
+        except Exception as e:
+            logger.error(f"Failed to clone/build repository {url}: {e}")
+            if cfg_processor_settings.logging_to_elastics:
+                error_timestamp = datetime.now(timezone.utc).isoformat()
+                error_doc = {
+                    "timestamp": error_timestamp,
+                    "service": "cfg_processor",
+                    "error": str(e),
+                    "url": url,
+                    "stage": "clone_and_build"
+                }
+                await elastic_manager.insert_document(
+                    cfg_processor_settings.error_index,
+                    f"cfg_clone_{error_timestamp}",
+                    error_doc
+                )
+            continue
 
-        logger.info(f"Clone repository: {message['url']}")
-        repository_manager.clone_and_build(cfg_processor_settings.repo_script)
-        commit_hash = repository_manager.get_commit_hash(repo_path=repo_path)
-
-        for filename in repository_manager.get_files(extension=cfg_processor_settings.extension, folder=cfg_processor_settings.repo_folder):
+        for filename in repository_manager.get_files(extension=cfg_processor_settings.extension, folder=repo_path):
 
             try:
                 logger.info(f"Processing file: {filename}")
