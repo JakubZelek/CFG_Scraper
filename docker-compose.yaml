@@ -102,7 +102,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.CfgProcessorPython
-    container_name: cfg-processor
+    container_name: cfg-processor-python
     deploy:
       resources:
         limits:
