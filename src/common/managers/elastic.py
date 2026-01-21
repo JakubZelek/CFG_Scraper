@@ -18,7 +18,10 @@ class AsyncElasticSearchManager:
         return await self.elasticsearch.indices.create(index=index)
 
     async def is_repo_in_the_index(self, index: str, repo_url: str):
-        return await self.elasticsearch.exists(index=index, id=repo_url)
+        return await self.document_exists(index=index, doc_id=repo_url)
+
+    async def document_exists(self, index: str, doc_id: str) -> bool:
+        return await self.elasticsearch.exists(index=index, id=doc_id)
 
     async def insert_repo_info(self, index: str, repo_url: str):
         return await self.elasticsearch.index(index=index, id=repo_url, document={})

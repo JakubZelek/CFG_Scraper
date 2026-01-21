@@ -41,6 +41,13 @@ async def upload_to_elasticsearch():
                 logger.info(f"Processing graph: {graph_data['name']} from {graph_data['filepath']}")
                 logger.debug(f"Degree sequence - in: {graph_data.get('in_degrees')}, out: {graph_data.get('out_degrees')}")
 
+                if await elastic_manager.document_exists(elastic_upload_settings.cfg_index, graph_id):
+                    logger.info(f"Graph already exists in cfg index, skipping: {graph_id}")
+                    continue
+                if await elastic_manager.document_exists(elastic_upload_settings.cfg_isomorphism_index, graph_id):
+                    logger.info(f"Graph already exists in isomorphism index, skipping: {graph_id}")
+                    continue
+
                 graph_data["graph_dict"] = json.dumps(graph_data["graph_dict"])
                 found_isomorphism = await elastic_manager.get_isomorphic_graph_id(
                     graph=graph_data,
