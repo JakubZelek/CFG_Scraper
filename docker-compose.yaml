@@ -5,6 +5,7 @@ services:
   elasticsearch:
     image: ${ELASTIC_IMAGE}
     container_name: ${ELASTIC_CONTAINER}
+    restart: on-failure:5
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -12,7 +13,7 @@ services:
     ports:
       - "${ELASTIC_HOST}:9200"
     volumes:
-      - "${ELASTIC_VOLUME}:/usr/share/elasticsearch/data"
+      - "./elasticsearch-data:/usr/share/elasticsearch/data"
     healthcheck:
       test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
       interval: 10s
@@ -23,6 +24,7 @@ services:
   kibana:
     image: ${KIBANA_IMAGE}
     container_name: ${KIBANA_CONTAINER}
+    restart: on-failure:5
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
@@ -34,6 +36,7 @@ services:
   kafka:
     image: ${KAFKA_IMAGE}
     container_name: ${KAFKA_CONTAINER}
+    restart: on-failure:5
     environment:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_NODE_ID=1
@@ -42,18 +45,23 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
-      - KAFKA_LOG_DIRS=/tmp/kafka-logs
+      - KAFKA_LOG_DIRS=/var/lib/kafka/data
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
       - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
       - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_LOG_RETENTION_MS=18000000
+      - KAFKA_LOG_SEGMENT_BYTES=67108864
       - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
     ports:
       - "${KAFKA_HOST}:9092"
+    volumes:
+      - "./kafka-data:/var/lib/kafka/data"
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 9092 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+
 
 # Url Api
   url-api:
@@ -61,6 +69,7 @@ services:
       context: .
       dockerfile: Dockerfile.UrlApp
     container_name: url-api
+    restart: on-failure:5
     ports:
       - "${URL_API_HOST}:8000"
     environment:
@@ -82,6 +91,7 @@ services:
       context: .
       dockerfile: Dockerfile.ElasticsearchUpload
     container_name: elasticsearch-upload
+    restart: on-failure:5
     environment:
       KAFKA_BROKER: kafka:${KAFKA_HOST}
       GRAPH_KAFKA_TOPIC: ${GRAPH_KAFKA_TOPIC}
@@ -103,6 +113,7 @@ services:
       context: .
       dockerfile: Dockerfile.CfgProcessorPython
     container_name: cfg-processor-python
+    restart: on-failure:5
     deploy:
       resources:
         limits:
@@ -130,6 +141,7 @@ services:
       context: .
       dockerfile: Dockerfile.CfgProcessorCpp
     container_name: cfg-processor-cpp
+    restart: on-failure:5
     deploy:
       resources:
         limits:
