@@ -9,6 +9,21 @@ REPO_PATH="$BASE_DIR/$REPO_NAME"
 CACHE_DIR="$REPO_PATH/.cfg-java-cache"
 FALLBACK_CLASSES_DIR="$REPO_PATH/.cfg-java-classes"
 JAVA_CFG_CLI_CMD="${JAVA_CFG_CLI_CMD:-java -jar /app/java-cfg-cli/target/java-cfg-cli-1.0.0-all.jar}"
+JAVA_CFG_REMOTE_DEBUG="${JAVA_CFG_REMOTE_DEBUG:-false}"
+JAVA_CFG_REMOTE_DEBUG_PORT="${JAVA_CFG_REMOTE_DEBUG_PORT:-5005}"
+JAVA_CFG_REMOTE_DEBUG_SUSPEND="${JAVA_CFG_REMOTE_DEBUG_SUSPEND:-n}"
+
+run_java_cfg_cli() {
+    local args="$1"
+    local debug_opts=""
+
+    if [ "$JAVA_CFG_REMOTE_DEBUG" = "true" ]; then
+        debug_opts="-agentlib:jdwp=transport=dt_socket,server=y,suspend=$JAVA_CFG_REMOTE_DEBUG_SUSPEND,address=*:$JAVA_CFG_REMOTE_DEBUG_PORT"
+        echo "Java remote debugging enabled on port $JAVA_CFG_REMOTE_DEBUG_PORT (suspend=$JAVA_CFG_REMOTE_DEBUG_SUSPEND)"
+    fi
+
+    JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} $debug_opts" eval "$JAVA_CFG_CLI_CMD $args"
+}
 
 mkdir -p "$BASE_DIR"
 cd "$BASE_DIR"
@@ -39,8 +54,11 @@ build_with_maven() {
 build_with_gradle() {
     if [ -f "$REPO_PATH/gradlew" ]; then
         (cd "$REPO_PATH" && ./gradlew --no-daemon classes)
-    else
+    elif command -v gradle >/dev/null 2>&1; then
         (cd "$REPO_PATH" && gradle --no-daemon classes)
+    else
+        echo "No gradle wrapper and gradle binary not found, falling back to javac"
+        build_with_javac_fallback
     fi
 }
 
@@ -73,6 +91,5 @@ else
 fi
 
 mkdir -p "$CACHE_DIR"
-# Build one cache file per Java source so cfg_build_script.sh can stay per-file like other languages.
-eval "$JAVA_CFG_CLI_CMD --repo-root \"$REPO_PATH\" --cache-dir \"$CACHE_DIR\""
+run_java_cfg_cli "--repo-root \"$REPO_PATH\" --cache-dir \"$CACHE_DIR\""
 
