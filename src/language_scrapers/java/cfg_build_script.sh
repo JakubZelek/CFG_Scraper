@@ -15,7 +15,7 @@ if [ -f "$CACHE_FILE" ]; then
     cat "$CACHE_FILE"
     exit 0
 fi
-
+echo "testing invocation: $JAVA_CFG_CLI_CMD --repo-root \"$REPO_DIR\" --filepath \"$FILEPATH\""
 debug_opts=""
 if [ "$JAVA_CFG_REMOTE_DEBUG" = "true" ]; then
     debug_opts="-agentlib:jdwp=transport=dt_socket,server=y,suspend=$JAVA_CFG_REMOTE_DEBUG_SUSPEND,address=*:$JAVA_CFG_REMOTE_DEBUG_PORT"

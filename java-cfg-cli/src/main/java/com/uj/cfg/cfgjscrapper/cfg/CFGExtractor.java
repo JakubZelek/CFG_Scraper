@@ -196,6 +196,21 @@ public class CFGExtractor {
             cp.append(javaClassPath);
         }
 
+        String javaHome = System.getProperty("java.home", "");
+        if (!javaHome.isBlank()) {
+            Path libDir = Path.of(javaHome, "lib");
+            if (Files.isDirectory(libDir)) {
+                try (Stream<Path> runtimeJars = Files.list(libDir)) {
+                    runtimeJars
+                            .filter(Files::isRegularFile)
+                            .filter(p -> p.toString().endsWith(".jar"))
+                            .forEach(p -> cp.append(sep).append(p.toAbsolutePath()));
+                } catch (IOException ignored) {
+                    log.error("Failed to extract jars: ", ignored);
+                }
+            }
+        }
+
         final int jarLimit = 256;
         Set<String> addedJars = new HashSet<>();
         for (String d : classDirs) {
@@ -215,14 +230,12 @@ public class CFGExtractor {
                     }
                 }
             } catch (Exception ignored) {
-                log.error("Failed to find jars under {}", d, ignored);
+                log.error("Failed to extract jars: ", ignored);
             }
             if (addedJars.size() >= jarLimit) {
                 break;
             }
         }
-
-        cp.append(sep).append("jrt:");
         Options.v().set_soot_classpath(cp.toString());
 
         try {

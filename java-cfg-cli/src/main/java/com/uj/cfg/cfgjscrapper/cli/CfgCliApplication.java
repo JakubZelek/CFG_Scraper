@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uj.cfg.cfgjscrapper.cfg.CFGExtractor;
 import com.uj.cfg.cfgjscrapper.cfg.ClassCfg;
 import com.uj.cfg.cfgjscrapper.cfg.MethodCfg;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -22,12 +24,14 @@ import java.util.stream.Stream;
 
 public class CfgCliApplication {
 
+    private static final Logger log = LoggerFactory.getLogger(CfgCliApplication.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Pattern PACKAGE_PATTERN = Pattern.compile("(?m)^\\s*package\\s+([\\w.]+)\\s*;");
     private static final Pattern TOKEN_PATTERN = Pattern.compile("\\{|\\}|\\b(class|interface|enum|record)\\s+([A-Za-z_][A-Za-z0-9_]*)");
     private static final List<String> SKIP_DIR_NAMES = List.of(".git", ".idea", "target", "build", ".gradle", ".mvn", ".cfg-java-cache", ".cfg-java-classes");
 
     public static void main(String[] args) throws Exception {
+        Thread.sleep(20000);
         CliArgs cliArgs = CliArgs.parse(args);
 
         Path repoRoot = Path.of(cliArgs.repoRoot()).toAbsolutePath().normalize();
@@ -37,23 +41,31 @@ public class CfgCliApplication {
         if (!Files.isDirectory(repoRoot)) {
             throw new IllegalArgumentException("Repository root does not exist: " + repoRoot);
         }
+        log.info("Starting Java CFG extraction for repoRoot={} (mode={})",
+                repoRoot,
+                sourceFile == null ? "cache" : "single-file");
 
         Map<Path, SourceFileInfo> sourceIndex = indexSourceFiles(repoRoot);
+        log.info("Indexed {} Java source files", sourceIndex.size());
         Map<Path, RepoFileCfg> grouped = groupCfgsBySourceFile(repoRoot, sourceIndex);
+        log.info("Prepared grouped CFG payloads for {} files", grouped.size());
 
         if (cacheDir != null) {
             writeCache(repoRoot, cacheDir, grouped);
+            log.info("Wrote CFG cache to {}", cacheDir);
         }
 
         if (sourceFile != null) {
             RepoFileCfg payload = grouped.getOrDefault(sourceFile, new RepoFileCfg(sourceFile.toString(), List.of()));
-            System.out.println(MAPPER.writeValueAsString(payload));
+            log.info("Returning CFG payload for {} with {} graphs", sourceFile, payload.getGraphs().size());
+            log.warn(MAPPER.writeValueAsString(payload));
         }
     }
 
     private static Map<Path, RepoFileCfg> groupCfgsBySourceFile(Path repoRoot, Map<Path, SourceFileInfo> sourceIndex) throws IOException {
         CFGExtractor extractor = new CFGExtractor();
         List<ClassCfg> classCfgs = extractor.extractFromClasses(repoRoot);
+        log.info("Extractor returned {} class CFG entries", classCfgs.size());
 
         Map<String, Path> fqcnToSource = new LinkedHashMap<>();
         Map<Path, RepoFileCfg> grouped = new LinkedHashMap<>();
@@ -158,6 +170,7 @@ public class CfgCliApplication {
 
     private static void writeCache(Path repoRoot, Path cacheDir, Map<Path, RepoFileCfg> grouped) throws IOException {
         Files.createDirectories(cacheDir);
+        int written = 0;
         for (Map.Entry<Path, RepoFileCfg> entry : grouped.entrySet()) {
             Path sourcePath = entry.getKey();
             RepoFileCfg payload = entry.getValue();
@@ -165,7 +178,9 @@ public class CfgCliApplication {
             Path outputFile = cacheDir.resolve(relativePath.toString() + ".json");
             Files.createDirectories(outputFile.getParent());
             Files.writeString(outputFile, MAPPER.writeValueAsString(payload), StandardCharsets.UTF_8);
+            written++;
         }
+        log.info("Cached {} per-file CFG payloads", written);
     }
 
     record SourceFileInfo(Path path, String packageName, List<String> declaredTypes) {
