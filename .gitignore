@@ -1,1 +1,3 @@
 elasticsearch/
+java-cfg-cli/target/
+.idea/

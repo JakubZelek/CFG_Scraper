@@ -45,8 +45,8 @@ curl -X POST http://localhost:8000/scrap \
 | Field | Type | Description |
 |-------|------|-------------|
 | `url` | string | Git repository URL |
-| `language_topic` | string | Language processor to use (must be in `LANGUAGE_TOPICS`) |
-| `files_extension` | string | File extension to process (e.g., `.py`, `.cpp`) |
+| `language_topic` | string | Language processor to use (must be in `LANGUAGE_TOPICS`, e.g. `python`, `cpp17`, `java`) |
+| `files_extension` | string | File extension to process (e.g., `.py`, `.cpp`, `.java`) |
 | `options` | object | Optional additional configuration |
 
 ### Scrape Multiple Repositories
@@ -95,6 +95,8 @@ The Dockerfile should set up everything necessary for the processor, including i
 The new processor is based on `processors.cfg_processor`, which runs the `repo_script.sh` script. After that, it iterates through files in the directory that have the appropriate extension and runs `cfg_build_script.sh` with the filename as a parameter.
 
 Existing solutions also run `file_to_cfg.py` inside `cfg_build_script.sh`, which is responsible for building the CFG from a single file. **The solution must print the result (CFG) as JSON to standard output** - the CFG processor uses this output for validation and further processing.
+
+Java support follows the same architecture: the Python `cfg_processor` remains the worker, and `src/language_scrapers/java/*.sh` invoke a standalone Java CLI process (Soot-based) to generate CFG JSON. No additional Java web middleware is required.
 
 ### Step 5: CFG Validation
 

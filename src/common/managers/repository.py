@@ -1,4 +1,5 @@
 import json
+import logging
 import subprocess
 from pathlib import Path
 
@@ -23,8 +24,11 @@ class RepositoryManager:
 
     def get_files(self, extension: str, folder: str):
         folder = Path(folder)
-        ext = extension.lstrip(".")  # Handle both ".py" and "py"
+        logging.info(f"Searching for files with extension: {extension} in {folder}")
+        logging.info(f"Files found: {list(folder.rglob(f'*.{extension}'))}")
+        ext = extension.lstrip(".")
         for filename in folder.rglob(f"*.{ext}"):
+            logging.info(f"Found file: {filename}")
             yield filename
 
     def generate_cfg_from_file(self, filename: str, cfg_build_script: str):
