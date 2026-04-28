@@ -22,7 +22,11 @@ class ProcessUrlService:
             return {"status": "repo already exists"}
 
         print(f"[DEBUG] Sending to Kafka topic: {repo_input.language_topic}")
-        future = self.kafka_manager.push_to_the_topic(topic=repo_input.language_topic, message=repo_input.model_dump())
+        future = self.kafka_manager.push_to_the_topic(
+            topic=repo_input.language_topic,
+            message=repo_input.model_dump(),
+            key=repo_input.url,
+        )
         try:
             result = future.get(timeout=10)
             print(f"[DEBUG] Kafka send result: {result}")
@@ -48,7 +52,11 @@ class ProcessUrlService:
                 message["url"] = url
                 message.pop("url_list")
 
-                self.kafka_manager.push_to_the_topic(topic=repo_input.language_topic, message=message)
+                self.kafka_manager.push_to_the_topic(
+                    topic=repo_input.language_topic,
+                    message=message,
+                    key=url,
+                )
                 await self.elastic_manager.insert_repo_info(self.elastic_repository_index, url)
                 repos_processed.append(url)
             else:
