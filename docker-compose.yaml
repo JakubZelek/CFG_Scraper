@@ -142,7 +142,7 @@ services:
       ERROR_INDEX: ${ERROR_INDEX}
     deploy:
       mode: replicated
-      replicas: 4
+      replicas: 1 # can be increased to 4 if needed
       resources:
         limits:
           memory: 1G
@@ -153,100 +153,100 @@ services:
         condition: service_healthy
 
 
-# CFG Processor settings (Python)
-#   cfg-processor-python:
-#     build:
-#       context: .
-#       dockerfile: Dockerfile.CfgProcessorPython
-#     container_name: cfg-processor-python
-#     restart: on-failure:5
-#     deploy:
-#       resources:
-#         limits:
-#           memory: 4G
-#     environment:
-#       LANGUAGE: ${PYTHON_CFG_LANGUAGE}
-#       EXTENSION: ${PYTHON_CFG_EXTENSION}
-#       KAFKA_BROKER: kafka:${KAFKA_HOST}
-#       GRAPH_KAFKA_TOPIC: ${GRAPH_KAFKA_TOPIC}
-#       LANGUAGE_TOPICS: ${LANGUAGE_TOPICS}
-#       REPO_SCRIPT: ${PYTHON_CFG_REPO_SCRIPT}
-#       CFG_BUILD_SCRIPT: ${PYTHON_CFG_BUILD_SCRIPT}
-#       ELASTIC_HOST: http://elasticsearch:${ELASTIC_HOST}
-#       ERROR_INDEX: ${ERROR_INDEX}
-#       REPO_FOLDER: ${PYTHON_REPO_FOLDER}
-#     depends_on:
-#       kafka:
-#         condition: service_healthy  
-#       elasticsearch:
-#         condition: service_healthy
+#CFG Processor settings (Python)
+  cfg-processor-python:
+    build:
+      context: .
+      dockerfile: Dockerfile.CfgProcessorPython
+    container_name: cfg-processor-python
+    restart: on-failure:5
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    environment:
+      LANGUAGE: ${PYTHON_CFG_LANGUAGE}
+      EXTENSION: ${PYTHON_CFG_EXTENSION}
+      KAFKA_BROKER: kafka:${KAFKA_HOST}
+      GRAPH_KAFKA_TOPIC: ${GRAPH_KAFKA_TOPIC}
+      LANGUAGE_TOPICS: ${LANGUAGE_TOPICS}
+      REPO_SCRIPT: ${PYTHON_CFG_REPO_SCRIPT}
+      CFG_BUILD_SCRIPT: ${PYTHON_CFG_BUILD_SCRIPT}
+      ELASTIC_HOST: http://elasticsearch:${ELASTIC_HOST}
+      ERROR_INDEX: ${ERROR_INDEX}
+      REPO_FOLDER: ${PYTHON_REPO_FOLDER}
+    depends_on:
+      kafka:
+        condition: service_healthy  
+      elasticsearch:
+        condition: service_healthy
 
-# # CFG Processor settings (CPP)
-#   cfg-processor-cpp:
-#     build:
-#       context: .
-#       dockerfile: Dockerfile.CfgProcessorCpp
-#     container_name: cfg-processor-cpp
-#     restart: on-failure:5
-#     deploy:
-#       resources:
-#         limits:
-#           memory: 4G
-#     environment:
-#       LANGUAGE: ${CPP_CFG_LANGUAGE}
-#       EXTENSION: ${CPP_CFG_EXTENSION}
-#       KAFKA_BROKER: kafka:${KAFKA_HOST}
-#       GRAPH_KAFKA_TOPIC: ${GRAPH_KAFKA_TOPIC}
-#       LANGUAGE_TOPICS: ${LANGUAGE_TOPICS}
-#       REPO_SCRIPT: ${CPP_CFG_REPO_SCRIPT}
-#       CFG_BUILD_SCRIPT: ${CPP_CFG_BUILD_SCRIPT}
-#       ELASTIC_HOST: http://elasticsearch:${ELASTIC_HOST}
-#       ERROR_INDEX: ${ERROR_INDEX}
-#       LOGGING_TO_ELASTIC: ${LOGGING_TO_ELASTIC}
-#       REPO_FOLDER: ${CPP_REPO_FOLDER}
+# CFG Processor settings (CPP)
+  cfg-processor-cpp:
+    build:
+      context: .
+      dockerfile: Dockerfile.CfgProcessorCpp
+    container_name: cfg-processor-cpp
+    restart: on-failure:5
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    environment:
+      LANGUAGE: ${CPP_CFG_LANGUAGE}
+      EXTENSION: ${CPP_CFG_EXTENSION}
+      KAFKA_BROKER: kafka:${KAFKA_HOST}
+      GRAPH_KAFKA_TOPIC: ${GRAPH_KAFKA_TOPIC}
+      LANGUAGE_TOPICS: ${LANGUAGE_TOPICS}
+      REPO_SCRIPT: ${CPP_CFG_REPO_SCRIPT}
+      CFG_BUILD_SCRIPT: ${CPP_CFG_BUILD_SCRIPT}
+      ELASTIC_HOST: http://elasticsearch:${ELASTIC_HOST}
+      ERROR_INDEX: ${ERROR_INDEX}
+      LOGGING_TO_ELASTIC: ${LOGGING_TO_ELASTIC}
+      REPO_FOLDER: ${CPP_REPO_FOLDER}
 
-#     depends_on:
-#       kafka:
-#         condition: service_healthy
-#       elasticsearch:
-#         condition: service_healthy
+    depends_on:
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
 
-# # CFG Processor settings (Java)
-#   cfg-processor-java:
-#     build:
-#       context: .
-#       dockerfile: Dockerfile.CfgProcessorJava
-#     container_name: cfg-processor-java
-#     restart: on-failure:5
-#     deploy:
-#       resources:
-#         limits:
-#           memory: 4G
-#     ports:
-#       - "${JAVA_CFG_REMOTE_DEBUG_HOST_PORT}:${JAVA_CFG_REMOTE_DEBUG_PORT}"
-#     environment:
-#       LANGUAGE: ${JAVA_CFG_LANGUAGE}
-#       EXTENSION: ${JAVA_CFG_EXTENSION}
-#       KAFKA_BROKER: kafka:${KAFKA_HOST}
-#       GRAPH_KAFKA_TOPIC: ${GRAPH_KAFKA_TOPIC}
-#       LANGUAGE_TOPICS: ${LANGUAGE_TOPICS}
-#       REPO_SCRIPT: ${JAVA_CFG_REPO_SCRIPT}
-#       CFG_BUILD_SCRIPT: ${JAVA_CFG_BUILD_SCRIPT}
-#       ELASTIC_HOST: http://elasticsearch:${ELASTIC_HOST}
-#       ERROR_INDEX: ${ERROR_INDEX}
-#       LOGGING_TO_ELASTIC: ${LOGGING_TO_ELASTIC}
-#       REPO_FOLDER: ${JAVA_REPO_FOLDER}
-#       JAVA_CFG_CLI_CMD: ${JAVA_CFG_CLI_CMD}
-#       JAVA_ALLOW_WRAPPER_DOWNLOADS: ${JAVA_ALLOW_WRAPPER_DOWNLOADS}
-#       JAVA_BUILD_OFFLINE: ${JAVA_BUILD_OFFLINE}
-#       JAVA_CFG_REMOTE_DEBUG: ${JAVA_CFG_REMOTE_DEBUG}
-#       JAVA_CFG_REMOTE_DEBUG_PORT: ${JAVA_CFG_REMOTE_DEBUG_PORT}
-#       JAVA_CFG_REMOTE_DEBUG_SUSPEND: ${JAVA_CFG_REMOTE_DEBUG_SUSPEND}
-#     depends_on:
-#       kafka:
-#         condition: service_healthy
-#       elasticsearch:
-#         condition: service_healthy
+# CFG Processor settings (Java)
+  cfg-processor-java:
+    build:
+      context: .
+      dockerfile: Dockerfile.CfgProcessorJava
+    container_name: cfg-processor-java
+    restart: on-failure:5
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    ports:
+      - "${JAVA_CFG_REMOTE_DEBUG_HOST_PORT}:${JAVA_CFG_REMOTE_DEBUG_PORT}"
+    environment:
+      LANGUAGE: ${JAVA_CFG_LANGUAGE}
+      EXTENSION: ${JAVA_CFG_EXTENSION}
+      KAFKA_BROKER: kafka:${KAFKA_HOST}
+      GRAPH_KAFKA_TOPIC: ${GRAPH_KAFKA_TOPIC}
+      LANGUAGE_TOPICS: ${LANGUAGE_TOPICS}
+      REPO_SCRIPT: ${JAVA_CFG_REPO_SCRIPT}
+      CFG_BUILD_SCRIPT: ${JAVA_CFG_BUILD_SCRIPT}
+      ELASTIC_HOST: http://elasticsearch:${ELASTIC_HOST}
+      ERROR_INDEX: ${ERROR_INDEX}
+      LOGGING_TO_ELASTIC: ${LOGGING_TO_ELASTIC}
+      REPO_FOLDER: ${JAVA_REPO_FOLDER}
+      JAVA_CFG_CLI_CMD: ${JAVA_CFG_CLI_CMD}
+      JAVA_ALLOW_WRAPPER_DOWNLOADS: ${JAVA_ALLOW_WRAPPER_DOWNLOADS}
+      JAVA_BUILD_OFFLINE: ${JAVA_BUILD_OFFLINE}
+      JAVA_CFG_REMOTE_DEBUG: ${JAVA_CFG_REMOTE_DEBUG}
+      JAVA_CFG_REMOTE_DEBUG_PORT: ${JAVA_CFG_REMOTE_DEBUG_PORT}
+      JAVA_CFG_REMOTE_DEBUG_SUSPEND: ${JAVA_CFG_REMOTE_DEBUG_SUSPEND}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
 
 # CFG Processor settings (JavaScript)
 # Runs as 4 replicas. All replicas join the Kafka consumer group `cfg_group_v2`
@@ -272,7 +272,7 @@ services:
     restart: on-failure:5
     deploy:
       mode: replicated
-      replicas: 4
+      replicas: 1 # can be increased to 4 if needed
       resources:
         limits:
           memory: 1G
@@ -304,7 +304,7 @@ services:
     restart: on-failure:5
     deploy:
       mode: replicated
-      replicas: 4
+      replicas: 1 
       resources:
         limits:
           memory: 1G
