@@ -1,0 +1,19 @@
+{
+  "name": "js-cfg-cli",
+  "version": "1.0.0",
+  "description": "Generate per-function control flow graphs (CFGs) for JavaScript and TypeScript files using ESLint code-path-analysis. Emits JSON to stdout for the CFG_Scraper pipeline.",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "js-cfg-cli": "./bin/cli.js"
+  },
+  "main": "./src/runner.js",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "dependencies": {
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "espree": "^10.0.0"
+  }
+}
