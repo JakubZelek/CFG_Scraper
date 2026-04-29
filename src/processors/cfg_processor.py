@@ -66,11 +66,7 @@ async def cfg_processor():
 
                 graph_batch = GraphBatch(filepath=str(filename), commit_hash=commit_hash,
                                             repo_url=url, language=cfg_processor_settings.language, graph_list=graph_list)
-                kafka_producer.push_to_the_topic(
-                    cfg_processor_settings.graph_kafka_topic,
-                    graph_batch.model_dump(),
-                    key=str(filename),
-                )
+                kafka_producer.push_to_the_topic(cfg_processor_settings.graph_kafka_topic, graph_batch.model_dump())
 
             except Exception as e:
 
