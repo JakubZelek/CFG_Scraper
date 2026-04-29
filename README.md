@@ -3,7 +3,7 @@
 A distributed system for extracting Control Flow Graphs (CFGs) from source code repositories and storing them in Elasticsearch with isomorphism detection.
 
 # Architecture
-<img width="1086" height="441" alt="image" src="https://github.com/user-attachments/assets/4a8f3711-d634-47bf-a63f-bf4048d4ae2e" />
+
 
 
 ## Architecture Components
@@ -32,22 +32,19 @@ A distributed system for extracting Control Flow Graphs (CFGs) from source code 
 **Endpoint:** `POST http://localhost:8000/scrap`
 
 ```bash
-curl -X POST http://localhost:8000/scrap \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://github.com/username/repository",
-    "language_topic": "python",
-    "files_extension": ".py"
-  }'
+o
 ```
 
 **Request Body:**
-| Field | Type | Description |
-|-------|------|-------------|
-| `url` | string | Git repository URL |
-| `language_topic` | string | Language processor to use (must be in `LANGUAGE_TOPICS`, e.g. `python`, `cpp17`, `java`) |
-| `files_extension` | string | File extension to process (e.g., `.py`, `.cpp`, `.java`) |
-| `options` | object | Optional additional configuration |
+
+
+| Field             | Type   | Description                                                                                                          |
+| ----------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
+| `url`             | string | Git repository URL                                                                                                   |
+| `language_topic`  | string | Language processor to use (must be in `LANGUAGE_TOPICS`, e.g. `python`, `cpp17`, `java`, `javascript`, `typescript`) |
+| `files_extension` | string | File extension to process (e.g., `.py`, `.cpp`, `.java`, `.js`, `.ts`)                                               |
+| `options`         | object | Optional additional configuration                                                                                    |
+
 
 ### Scrape Multiple Repositories
 
@@ -82,7 +79,7 @@ mkdir -p src/language_scrapers/<language>/
 
 This script should clone and build the repository. Because the build procedure can differ based on the language, the script should be created separately for each language.
 
-### Step 3: Create `cfg_build_script.sh` 
+### Step 3: Create `cfg_build_script.sh`
 
 This script generates a CFG for a single file (should take the filepath as a parameter). The script is kept as a shell script based on the assumption that users may want to use their preferred language/tools for CFG generation.
 
@@ -98,15 +95,19 @@ Existing solutions also run `file_to_cfg.py` inside `cfg_build_script.sh`, which
 
 Java support follows the same architecture: the Python `cfg_processor` remains the worker, and `src/language_scrapers/java/*.sh` invoke a standalone Java CLI process (Soot-based) to generate CFG JSON. No additional Java web middleware is required.
 
+JavaScript and TypeScript share an analogous setup: a single Node CLI in `js-cfg-cli/` (the JS/TS counterpart of `java-cfg-cli/`) uses ESLint's [code path analysis](https://eslint.org/docs/latest/extend/code-path-analysis) to produce a CFG per function and program. The `javascript` and `typescript` scrapers in `src/language_scrapers/` are thin wrappers around this CLI; the parser is selected automatically from the file extension (`@typescript-eslint/parser` for `.ts`/`.tsx`/`.mts`/`.cts`, `espree` otherwise).
+
 ### Step 5: CFG Validation
 
 The CFG processor validates all generated graphs using Pydantic models before sending them to Elasticsearch. The validation includes:
 
 **Graph Structure Validation:**
+
 - All target nodes referenced in the adjacency list must exist as keys in the graph
 - Invalid references (edges pointing to non-existent nodes) will raise a validation error
 
 **Automatic Field Computation:**
+
 - `out_degrees` - Sorted list of outgoing edge counts for each node (used for isomorphism pre-filtering)
 - `in_degrees` - Sorted list of incoming edge counts for each node (used for isomorphism pre-filtering)
 
@@ -182,8 +183,9 @@ cfg-processor-<language>:
 ```
 
 Also add the language to `LANGUAGE_TOPICS`:
+
 ```env
-LANGUAGE_TOPICS=python,cpp,<language>
+LANGUAGE_TOPICS=python,cpp17,java,javascript,typescript,<language>
 ```
 
 ### Step 8: Rebuild and Test
@@ -196,10 +198,12 @@ make rebuild
 
 ## Makefile Commands
 
-| Command | Description |
-|---------|-------------|
-| `make build` | Build and start all containers |
+
+| Command        | Description                                           |
+| -------------- | ----------------------------------------------------- |
+| `make build`   | Build and start all containers                        |
 | `make rebuild` | Remove all containers/images and rebuild from scratch |
+
 
 ---
 
@@ -215,3 +219,4 @@ Access Kibana at `http://localhost:5601` to explore the indexed CFGs.
 - `cfg_isomorphism_index` - Graphs that are isomorphic to existing ones
 - `repos` - Processed repository URLs
 - `error_logs` - Processing errors
+

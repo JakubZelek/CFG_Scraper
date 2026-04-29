@@ -1,0 +1,32 @@
+FROM python:3.11-slim
+
+# git for cloning repos, curl + ca-certificates for the NodeSource setup
+# script, and gnupg for verifying its signing key.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    ca-certificates \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pin a Node.js LTS line that satisfies ESLint v9's engine requirement
+# (`^18.18 || ^20.9 || >=21.1`). NodeSource bundles a recent npm too.
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY . /app/
+
+RUN chmod +x /app/src/language_scrapers/javascript/*.sh
+
+RUN pip install --upgrade pip
+RUN pip install .
+
+# Install the CLI's Node dependencies once at image build time so the
+# runtime container doesn't need network access.
+RUN cd /app/js-cfg-cli && npm ci --omit=dev
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "-m", "processors.cfg_processor"]
