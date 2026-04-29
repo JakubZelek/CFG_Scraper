@@ -32,8 +32,13 @@ def yield_single_graph_to_be_loaded_to_elasticsearch(cfg_message: str):
 
 async def upload_to_elasticsearch():
     elastic_manager = AsyncElasticSearchManager(hostname=elastic_upload_settings.elastic_host)
+    # Use a dedicated consumer group so rebalances on graph_topic (when an
+    # uploader replica restarts) don't also rebalance the language topics in
+    # cfg_group_v2. Multiple replicas of this service share this group_id and
+    # split graph_topic partitions among themselves.
     kafka_consumer = KafkaConsumerManager(kafka_topic=elastic_upload_settings.graph_kafka_topic,
-                                          kafka_broker=elastic_upload_settings.kafka_broker)
+                                          kafka_broker=elastic_upload_settings.kafka_broker,
+                                          group_id="upload_group_v1")
 
     for message in kafka_consumer.get_messages():
         try:

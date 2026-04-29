@@ -45,8 +45,8 @@ curl -X POST http://localhost:8000/scrap \
 | Field | Type | Description |
 |-------|------|-------------|
 | `url` | string | Git repository URL |
-| `language_topic` | string | Language processor to use (must be in `LANGUAGE_TOPICS`, e.g. `python`, `cpp17`, `java`) |
-| `files_extension` | string | File extension to process (e.g., `.py`, `.cpp`, `.java`) |
+| `language_topic` | string | Language processor to use (must be in `LANGUAGE_TOPICS`, e.g. `python`, `cpp17`, `java`, `javascript`, `typescript`) |
+| `files_extension` | string | File extension to process (e.g., `.py`, `.cpp`, `.java`, `.js`, `.ts`) |
 | `options` | object | Optional additional configuration |
 
 ### Scrape Multiple Repositories
@@ -97,6 +97,11 @@ The new processor is based on `processors.cfg_processor`, which runs the `repo_s
 Existing solutions also run `file_to_cfg.py` inside `cfg_build_script.sh`, which is responsible for building the CFG from a single file. **The solution must print the result (CFG) as JSON to standard output** - the CFG processor uses this output for validation and further processing.
 
 Java support follows the same architecture: the Python `cfg_processor` remains the worker, and `src/language_scrapers/java/*.sh` invoke a standalone Java CLI process (Soot-based) to generate CFG JSON. No additional Java web middleware is required.
+
+JavaScript and TypeScript share an analogous setup: a single Node CLI in `js-cfg-cli/` (the JS/TS counterpart of `java-cfg-cli/`) uses ESLint
+'s [code path analysis](https://eslint.org/docs/latest/extend/code-path-analysis) to produce a CFG per function and program. The `javascript` 
+and `typescript` scrapers in `src/language_scrapers/` are thin wrappers around this CLI; the parser is selected automatically from the file ex
+tension (`@typescript-eslint/parser` for `.ts`/`.tsx`/`.mts`/`.cts`, `espree` otherwise).
 
 ### Step 5: CFG Validation
 

@@ -1,0 +1,9 @@
+.git
+.idea
+elasticsearch/
+elasticsearch-data/
+kafka-data/
+java-cfg-cli/target/
+js-cfg-cli/node_modules/
+**/__pycache__/
+*.pyc
